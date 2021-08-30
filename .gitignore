@@ -1,1 +1,18 @@
 **/.idea/workspace.xml **/.idea/tasks.xml
+/build/classes/java/main/App.class
+/.gradle/6.3/javaCompile/classAnalysis.bin
+/.gradle/6.3/executionHistory/executionHistory.bin
+/.gradle/6.3/fileContent/fileContent.lock
+/.gradle/6.3/fileHashes/fileHashes.bin
+/out/artifacts/java_search_cli_jar/java-search-cli.jar
+/out/artifacts/java_search_cli_main_jar/java-search-cli.main.jar
+/.gradle/6.3/javaCompile/javaCompile.lock
+/build/generated/sources/annotationProcessor/java/main/META-INF/MANIFEST.MF
+/META-INF/MANIFEST.MF
+/.gradle/buildOutputCleanup/outputFiles.bin
+/build/classes/java/main/META-INF/native-image/picocli-generated/org.example/java-search-cli/proxy-config.json
+/build/classes/java/main/META-INF/native-image/picocli-generated/org.example/java-search-cli/reflect-config.json
+/build/classes/java/main/META-INF/native-image/picocli-generated/org.example/java-search-cli/resource-config.json
+/.gradle/6.3/javaCompile/taskHistory.bin
+/.idea
+/.gradle
