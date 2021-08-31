@@ -4,6 +4,8 @@ import java.io.InputStreamReader;
 
 public class App {
 
+    private final SearchSystem searchSystem = new SearchSystem();
+
     public static void main(String[] args) throws IOException {
         InteractiveState state = InteractiveState.PromptRequestType;
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -14,6 +16,8 @@ public class App {
         }
         System.exit(0);
     }
+
+
 
     public static void printWelcomeMessage() {
         System.out.println("Welcome to Zendesk Search");
