@@ -65,8 +65,7 @@ public enum InteractiveState {
             if ( (input == null) || input.equals("quit") ) {
                 return End;
             }
-            request.setSearchValue(input);
-            System.out.println(request.constructSearchHeader());
+            request.startSearchProcess(input);
             return End;
         }
     },

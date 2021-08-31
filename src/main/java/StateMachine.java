@@ -1,5 +1,3 @@
-import com.fasterxml.jackson.databind.JsonNode;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -8,7 +6,7 @@ public class StateMachine {
 
     private InteractiveState state = InteractiveState.PromptRequestType;
 
-    private final SearchRequest request = new SearchRequest( new SearchSystem() );
+    private final SearchRequest request = new SearchRequest();
 
     public void run() throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));

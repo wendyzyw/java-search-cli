@@ -20,7 +20,6 @@ public class SearchSystem {
             for ( int i=0; i<rootNode.size(); i++ ) {
                 JsonNode idNode = rootNode.get(i).path( searchTerm );
                 if ( idNode.asInt() == Integer.parseInt( searchValue ) ) {
-                    System.out.println(rootNode.get(i));
                     result = rootNode.get(i);
                 }
             }
