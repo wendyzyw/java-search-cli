@@ -1,8 +1,10 @@
+import com.fasterxml.jackson.databind.JsonNode;
+
 public enum InteractiveState {
     PromptRequestType {
         @Override
-        public InteractiveState nextState( String input ) {
-            if ((input == null) || input.equals("quit")) {
+        public InteractiveState nextState( String input, SearchRequest request ) {
+            if ( (input == null) || input.equals("quit") ) {
                 return End;
             }
             int requestType = Integer.parseInt(input);
@@ -20,14 +22,18 @@ public enum InteractiveState {
     },
     PromptSearchOption {
         @Override
-        public InteractiveState nextState( String input ) {
-            if ((input == null) || input.equals("quit")) {
+        public InteractiveState nextState( String input, SearchRequest request ) {
+            if ( (input == null) || input.equals("quit") ) {
                 return End;
             }
             int searchOption = Integer.parseInt(input);
             switch (searchOption) {
                 case 1:
+                    request.setSearchUsers(true);
+                    System.out.println("Enter search term");
+                    return PromptSearchTerm;
                 case 2:
+                    request.setSearchUsers(false);
                     System.out.println("Enter search term");
                     return PromptSearchTerm;
                 default:
@@ -37,32 +43,40 @@ public enum InteractiveState {
     },
     PromptSearchTerm {
         @Override
-        public InteractiveState nextState( String input ) {
+        public InteractiveState nextState( String input, SearchRequest request ) {
+            if ( (input == null) || input.equals("quit") ) {
+                return End;
+            }
+            request.setSearchTerm(input);
             System.out.println("Enter search value");
             return DisplaySearchResult;
         }
     },
     DisplayInvalidInputMessage {
         @Override
-        public InteractiveState nextState(String input) {
+        public InteractiveState nextState(String input, SearchRequest request) {
             System.out.println("Invalid input");
             return PromptRequestType;
         }
     },
     DisplaySearchResult {
         @Override
-        public InteractiveState nextState(String input) {
-            System.out.println("Searching ... ");
+        public InteractiveState nextState(String input, SearchRequest request) {
+            if ( (input == null) || input.equals("quit") ) {
+                return End;
+            }
+            request.setSearchValue(input);
+            System.out.println(request.constructSearchHeader());
             return End;
         }
     },
     End {
         @Override
-        public InteractiveState nextState( String input ) {
+        public InteractiveState nextState( String input, SearchRequest request ) {
             System.out.println("End");
             return this;
         }
     };
 
-    public abstract InteractiveState nextState( String input );
+    public abstract InteractiveState nextState( String input, SearchRequest request );
 }

@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 public class SearchSystem {
     public static final String USER_JSON_PATH = "C:\\wendy\\java-search-cli\\src\\main\\resources\\users.json";
 
-    public JsonNode filterOnSearchTerm( String searchTerm, String searchValue ) {
+    public JsonNode performSearch( String searchTerm, String searchValue ) {
         ObjectMapper mapper = new ObjectMapper();
         byte[] jsonData;
         JsonNode rootNode;
