@@ -1,5 +1,7 @@
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,21 +14,33 @@ public class SearchSystem {
         ObjectMapper mapper = new ObjectMapper();
         byte[] jsonData;
         JsonNode rootNode;
-        JsonNode result = null;
+        ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         try {
             jsonData = Files.readAllBytes(Paths.get(USER_JSON_PATH));
             rootNode = mapper.readTree(jsonData);
 
             for ( int i=0; i<rootNode.size(); i++ ) {
-                JsonNode idNode = rootNode.get(i).path( searchTerm );
-                if ( idNode.asInt() == Integer.parseInt( searchValue ) ) {
-                    result = rootNode.get(i);
+                JsonNode valueNode = rootNode.get(i).get( searchTerm );
+                switch (valueNode.getNodeType()) {
+                    case STRING:
+                        if ( valueNode.asText().contains( searchValue ) ) {
+                            arrayNode.add( rootNode.get(i) );
+                        }
+                        break;
+                    case NUMBER:
+                    case BOOLEAN:
+                        if ( valueNode.asInt() == Integer.parseInt( searchValue ) ) {
+                            arrayNode.add( rootNode.get(i) );
+                        }
+                        break;
+                    default:
+                        break;
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return result;
+        return arrayNode;
     }
 
 }

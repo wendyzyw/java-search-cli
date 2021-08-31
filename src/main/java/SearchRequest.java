@@ -28,11 +28,20 @@ public class SearchRequest {
     }
 
     public void printSearchResult() {
-        Iterator<Map.Entry<String, JsonNode>> iterator = searchResult.fields();
+        for ( int i=0; i<searchResult.size(); i++ ) {
+            printSingleSearchResultNode( searchResult.get(i) );
+            if ( i < searchResult.size()-1 ) {
+                System.out.println("---------------------------------------------");
+            }
+        }
+    }
+
+    public void printSingleSearchResultNode( JsonNode result ) {
+        Iterator<Map.Entry<String, JsonNode>> iterator = result.fields();
         while (iterator.hasNext()) {
             Map.Entry<String, JsonNode> element = iterator.next();
             String spacing = String.format("%1$"+ (TOTAL_SPACE-element.getKey().length()) +"s", "");
-            String value = element.getValue().getNodeType() == JsonNodeType.STRING ? element.getValue().textValue() : element.getValue().toString();
+            String value = element.getValue().getNodeType() == JsonNodeType.STRING ? element.getValue().asText(): element.getValue().toString();
             System.out.print(element.getKey() + spacing + value );
             System.out.println();
         }
