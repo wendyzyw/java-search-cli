@@ -14,7 +14,8 @@ public enum InteractiveState {
                     return PromptSearchOption;
                 case 2:
                     request.printSearchFields();
-                    return End;
+                    System.out.println("Press 1 to start another round of searching, or press 2 to view a list of searchable fields, or type 'quit' to exit");
+                    return PromptRequestType;
                 default:
                     System.out.println("Input option not valid, please refer to the previous message for available options");
                     return this;
@@ -67,7 +68,9 @@ public enum InteractiveState {
                 return End;
             }
             request.startSearchProcess(input);
-            return End;
+            System.out.println("--------------End of Search--------------");
+            System.out.println("Press 1 to start another round of searching, or press 2 to view a list of searchable fields, or type 'quit' to exit");
+            return PromptRequestType;
         }
     },
     End {

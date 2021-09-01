@@ -14,11 +14,19 @@ public class SearchRequest {
         this.searchSystem.initializeData();
     }
 
+    public void resetRequest() {
+        this.searchUsers = false;
+        this.searchTerm = null;
+        this.searchValue = null;
+        this.searchResult = null;
+    }
+
     public void startSearchProcess( String input ) {
         this.setSearchValue(input);
         this.printSearchHeader();
         this.performSearch();
         this.searchSystem.printArrayNode( this.searchResult );
+        this.resetRequest();
     }
 
     public void performSearch() {
