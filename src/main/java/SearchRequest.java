@@ -24,7 +24,12 @@ public class SearchRequest {
     }
 
     public void performSearch() {
-        this.searchResult = this.searchSystem.performSearch(this.searchTerm, this.searchValue);
+        this.searchSystem.initializeData();
+        if ( this.searchUsers ) {
+            this.searchResult = this.searchSystem.performSearch( this.searchSystem.getUserRootNode(), this.searchTerm, this.searchValue );
+        } else {
+            this.searchResult = this.searchSystem.performSearch( this.searchSystem.getTicketRootNode(), this.searchTerm, this.searchValue );
+        }
     }
 
     public void printSearchResult() {

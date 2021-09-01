@@ -52,13 +52,6 @@ public enum InteractiveState {
             return DisplaySearchResult;
         }
     },
-    DisplayInvalidInputMessage {
-        @Override
-        public InteractiveState nextState(String input, SearchRequest request) {
-            System.out.println("Invalid input");
-            return PromptRequestType;
-        }
-    },
     DisplaySearchResult {
         @Override
         public InteractiveState nextState(String input, SearchRequest request) {
@@ -67,6 +60,13 @@ public enum InteractiveState {
             }
             request.startSearchProcess(input);
             return End;
+        }
+    },
+    DisplayInvalidInputMessage {
+        @Override
+        public InteractiveState nextState(String input, SearchRequest request) {
+            System.out.println("Invalid input");
+            return PromptRequestType;
         }
     },
     End {
