@@ -1,11 +1,6 @@
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
-
-import java.util.Iterator;
-import java.util.Map;
 
 public class SearchRequest {
-    private final static int TOTAL_SPACE = 20;
     private final SearchSystem searchSystem;
     private boolean searchUsers = false;
     private String searchTerm;
@@ -20,35 +15,15 @@ public class SearchRequest {
         this.setSearchValue(input);
         this.printSearchHeader();
         this.performSearch();
-        this.printSearchResult();
+        this.searchSystem.printArrayNode( this.searchResult );
     }
 
     public void performSearch() {
         this.searchSystem.initializeData();
         if ( this.searchUsers ) {
-            this.searchResult = this.searchSystem.performSearch( this.searchSystem.getUserRootNode(), this.searchTerm, this.searchValue );
+            this.searchResult = this.searchSystem.performSearch( "user", this.searchTerm, this.searchValue );
         } else {
-            this.searchResult = this.searchSystem.performSearch( this.searchSystem.getTicketRootNode(), this.searchTerm, this.searchValue );
-        }
-    }
-
-    public void printSearchResult() {
-        for ( int i=0; i<searchResult.size(); i++ ) {
-            printSingleSearchResultNode( searchResult.get(i) );
-            if ( i < searchResult.size()-1 ) {
-                System.out.println("---------------------------------------------");
-            }
-        }
-    }
-
-    public void printSingleSearchResultNode( JsonNode result ) {
-        Iterator<Map.Entry<String, JsonNode>> iterator = result.fields();
-        while (iterator.hasNext()) {
-            Map.Entry<String, JsonNode> element = iterator.next();
-            String spacing = String.format("%1$"+ (TOTAL_SPACE-element.getKey().length()) +"s", "");
-            String value = element.getValue().getNodeType() == JsonNodeType.STRING ? element.getValue().asText(): element.getValue().toString();
-            System.out.print(element.getKey() + spacing + value );
-            System.out.println();
+            this.searchResult = this.searchSystem.performSearch( "ticket", this.searchTerm, this.searchValue );
         }
     }
 
