@@ -11,7 +11,7 @@ public class StateMachine {
     public void run() throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         printWelcomeMessage();
-        while (state != InteractiveState.End) {
+        while (state != InteractiveState.End ) {
             String line = in.readLine( );
             state = state.nextState(line, request);
         }

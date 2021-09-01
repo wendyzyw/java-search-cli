@@ -8,8 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 public class SearchSystem {
     private final static int TOTAL_SPACE = 20;
@@ -20,6 +19,10 @@ public class SearchSystem {
     private JsonNode ticketRootNode;
 
     public void printArrayNode( JsonNode arrayNode ) {
+        if ( arrayNode.size() == 0 ) {
+            System.out.println( "No results found");
+            return;
+        }
         for ( int i=0; i<arrayNode.size(); i++ ) {
             printObjectNode( (ObjectNode) arrayNode.get(i) );
             if ( i < arrayNode.size()-1 ) {
@@ -75,6 +78,32 @@ public class SearchSystem {
             }
         }
         return arrayNode;
+    }
+
+    public Set<String> retrieveFieldsFormArrayNode( String searchUpon ) {
+        Set<String> result = new HashSet<>();
+        JsonNode rootNode = null;
+        if ( "user".equalsIgnoreCase( searchUpon ) ) {
+            rootNode = this.userRootNode;
+        }
+        if ( "ticket".equalsIgnoreCase( searchUpon ) ) {
+            rootNode = this.ticketRootNode;
+        }
+        for ( int i=0; i<rootNode.size(); i++ ) {
+            Set<String> fields = retrieveFieldsFormObjectNode( (ObjectNode) rootNode.get(i) );
+            result.addAll( fields );
+        }
+        return result;
+    }
+
+    private Set<String> retrieveFieldsFormObjectNode( ObjectNode node ) {
+        Set<String> result = new HashSet<>();
+        Iterator<Map.Entry<String, JsonNode>> iterator = node.fields();
+        while (iterator.hasNext()) {
+            Map.Entry<String, JsonNode> element = iterator.next();
+            result.add( element.getKey() );
+        }
+        return result;
     }
 
     private JsonNode readDataFromJsonFile( String path ) {

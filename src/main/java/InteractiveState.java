@@ -13,7 +13,7 @@ public enum InteractiveState {
                     System.out.println("Select 1) Users or 2) Tickets");
                     return PromptSearchOption;
                 case 2:
-                    System.out.println("Fields");
+                    request.printSearchFields();
                     return End;
                 default:
                     return DisplayInvalidInputMessage;

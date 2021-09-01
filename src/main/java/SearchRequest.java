@@ -1,5 +1,7 @@
 import com.fasterxml.jackson.databind.JsonNode;
 
+import java.util.Set;
+
 public class SearchRequest {
     private final SearchSystem searchSystem;
     private boolean searchUsers = false;
@@ -20,11 +22,23 @@ public class SearchRequest {
 
     public void performSearch() {
         this.searchSystem.initializeData();
-        if ( this.searchUsers ) {
-            this.searchResult = this.searchSystem.performSearch( "user", this.searchTerm, this.searchValue );
+        if (this.searchUsers) {
+            this.searchResult = this.searchSystem.performSearch("user", this.searchTerm, this.searchValue);
         } else {
-            this.searchResult = this.searchSystem.performSearch( "ticket", this.searchTerm, this.searchValue );
+            this.searchResult = this.searchSystem.performSearch("ticket", this.searchTerm, this.searchValue);
         }
+    }
+
+    public void printSearchFields() {
+        this.searchSystem.initializeData();
+        Set<String> userFields = this.searchSystem.retrieveFieldsFormArrayNode( "user" );
+        Set<String> ticketFields = this.searchSystem.retrieveFieldsFormArrayNode( "ticket" );
+        System.out.println("---------------------------------------------");
+        System.out.println("Search users with: ");
+        userFields.forEach(System.out::println);
+        System.out.println("---------------------------------------------");
+        System.out.println("Search tickets with: ");
+        ticketFields.forEach(System.out::println);
     }
 
     public void printSearchHeader() {
