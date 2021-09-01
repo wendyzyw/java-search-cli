@@ -16,7 +16,8 @@ public enum InteractiveState {
                     request.printSearchFields();
                     return End;
                 default:
-                    return DisplayInvalidInputMessage;
+                    System.out.println("Input option not valid, please refer to the previous message for available options");
+                    return this;
             }
         }
     },
@@ -37,7 +38,8 @@ public enum InteractiveState {
                     System.out.println("Enter search term");
                     return PromptSearchTerm;
                 default:
-                    return DisplayInvalidInputMessage;
+                    System.out.println("Input option not valid, please refer to the previous message for available options");
+                    return this;
             }
         }
     },
@@ -48,8 +50,14 @@ public enum InteractiveState {
                 return End;
             }
             request.setSearchTerm(input);
-            System.out.println("Enter search value");
-            return DisplaySearchResult;
+            boolean isSearchTermValid = request.validateSearchTerm();
+            if ( isSearchTermValid ) {
+                System.out.println("Enter search value");
+                return DisplaySearchResult;
+            } else {
+                System.out.println("Search term not valid, Press 2 to view a list of searchable fields, or press 1 to restart your search");
+                return PromptRequestType;
+            }
         }
     },
     DisplaySearchResult {
@@ -60,13 +68,6 @@ public enum InteractiveState {
             }
             request.startSearchProcess(input);
             return End;
-        }
-    },
-    DisplayInvalidInputMessage {
-        @Override
-        public InteractiveState nextState(String input, SearchRequest request) {
-            System.out.println("Invalid input");
-            return PromptRequestType;
         }
     },
     End {

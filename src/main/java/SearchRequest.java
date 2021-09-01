@@ -11,6 +11,7 @@ public class SearchRequest {
 
     public SearchRequest() {
         this.searchSystem = new SearchSystem();
+        this.searchSystem.initializeData();
     }
 
     public void startSearchProcess( String input ) {
@@ -21,7 +22,6 @@ public class SearchRequest {
     }
 
     public void performSearch() {
-        this.searchSystem.initializeData();
         if (this.searchUsers) {
             this.searchResult = this.searchSystem.performSearch("user", this.searchTerm, this.searchValue);
         } else {
@@ -52,6 +52,22 @@ public class SearchRequest {
 
     public void setSearchTerm(String searchTerm) {
         this.searchTerm = searchTerm;
+    }
+
+    public boolean validateSearchTerm() {
+        if ( searchUsers ) {
+            Set<String> userFields = this.searchSystem.retrieveFieldsFormArrayNode( "user" );
+            if ( !userFields.contains( searchTerm ) ) {
+                return false;
+            }
+            return true;
+        } else {
+            Set<String> ticketFields = this.searchSystem.retrieveFieldsFormArrayNode( "ticket" );
+            if ( !ticketFields.contains( searchTerm ) ) {
+                return false;
+            }
+            return true;
+        }
     }
 
     public void setSearchValue(String searchValue) {
