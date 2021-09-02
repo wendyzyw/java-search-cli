@@ -21,6 +21,7 @@ gradlew run --console=plain
 3. after search results are displayed to the users, it will automatically prompt for either exiting the system or re-starting another round of search
 4. data from either json files are not normalized, which mean they would have heterogeneous fields which some of them have while others do not
 5. ticket might have no assignee_id or have an assignee with id that is not contained in the user data file, in both cases the assignee_name will be blank in the search result 
+6. all text inputs from the json data source files are default to UTF-8 format, some special characters might need other encoding types but it's not currently dealt with for the implementation 
 
 ## Some tradeoffs regarding the implementation 
 1. in order to acquire an exhaustive set of all distinct fields, the application loops through all user/ticket json object to retrieve the fields 
