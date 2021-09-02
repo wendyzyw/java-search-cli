@@ -2,6 +2,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.Set;
 
+/**
+* This class is responsible for holding all information required for a full round of search
+ * it delegates search operation to the search system it encapsulates
+ * kick start and finalized each round of search process by taking in user inputs and providing user feedbacks
+ * */
 public class SearchRequest {
     private final SearchSystem searchSystem;
     private boolean searchUsers = false;
@@ -11,11 +16,17 @@ public class SearchRequest {
     public static final String USER = "user";
     public static final String TICKET = "ticket";
 
+    /**
+     * initialize search system and search data from .json file
+     */
     public SearchRequest() {
         this.searchSystem = new SearchSystem();
         this.searchSystem.initializeData();
     }
 
+    /**
+     * clear all search related fields
+     */
     public void resetRequest() {
         this.searchUsers = false;
         this.searchTerm = null;
@@ -23,6 +34,11 @@ public class SearchRequest {
         this.searchResult = null;
     }
 
+    /**
+     * output: search header -> search system perform search -> output: search result -> clear search request
+     *
+     * @param input user input
+     */
     public void startSearchProcess( String input ) {
         this.setSearchValue(input);
         this.printSearchHeader();
@@ -31,6 +47,9 @@ public class SearchRequest {
         this.resetRequest();
     }
 
+    /**
+     * perform search based on category
+     */
     public void performSearch() {
         if (this.searchUsers) {
             this.searchResult = this.searchSystem.performSearch(USER, this.searchTerm, this.searchValue);
@@ -39,6 +58,20 @@ public class SearchRequest {
         }
     }
 
+    /**
+     * check if search term entered by user is a legit field name from .json
+     */
+    public boolean validateSearchTerm() {
+        if ( searchUsers ) {
+            Set<String> userFields = this.searchSystem.retrieveFieldsFormArrayNode( USER );
+            return userFields.contains(searchTerm);
+        } else {
+            Set<String> ticketFields = this.searchSystem.retrieveFieldsFormArrayNode( TICKET );
+            return ticketFields.contains(searchTerm);
+        }
+    }
+
+/// ------------------------------------------------------------------ methods that deal with displaying output messages
     public void printSearchFields() {
         printSearchFieldsForCategory( USER );
         printSearchFieldsForCategory( TICKET );
@@ -56,16 +89,7 @@ public class SearchRequest {
         System.out.println("Searching " + items + " for " + searchTerm + " with a value of " + searchValue);
     }
 
-    public boolean validateSearchTerm() {
-        if ( searchUsers ) {
-            Set<String> userFields = this.searchSystem.retrieveFieldsFormArrayNode( USER );
-            return userFields.contains(searchTerm);
-        } else {
-            Set<String> ticketFields = this.searchSystem.retrieveFieldsFormArrayNode( TICKET );
-            return ticketFields.contains(searchTerm);
-        }
-    }
-
+/// ------------------------------------------------------------------------------------------------------------ setters
     public void setSearchUsers(boolean searchUsers) {
         this.searchUsers = searchUsers;
     }

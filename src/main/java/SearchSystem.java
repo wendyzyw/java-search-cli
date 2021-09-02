@@ -10,6 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
+/**
+ * This class is responsible for dealing with JsonNode operations, conversions from .json files into JsonNode representation,
+ * traversing, searching, and updating JsonNode objects
+ * =centralization for core search related business logic (etc. how User and Ticket are associated)
+ * */
 public class SearchSystem {
     private final static int TOTAL_SPACE = 20;
     private static final String USER_JSON_PATH = "C:\\wendy\\java-search-cli\\src\\main\\resources\\users.json";
@@ -18,41 +23,124 @@ public class SearchSystem {
     private JsonNode userRootNode;
     private JsonNode ticketRootNode;
 
-    private static final Map<String, JsonNode> SEARCH_NAME_TO_JSONNODE_MAPPING = new HashMap<>();
+    private static final Map<String, JsonNode> SEARCH_CATEGORY_TO_JSONNODE_MAPPING = new HashMap<>();
 
+    /**
+     * perform searching on a rootNode that is a JsonNode representation of the users.json/ticket.json file upon
+     * requested searchTerm and searchValue
+     *
+     * @param searchUpon "user" or "ticket"
+     * @param searchTerm field name
+     * @param searchValue value
+     *
+     * @return search result as a JsonNode (ArrayNode)
+     */
     public JsonNode performSearch(String searchUpon, String searchTerm, String searchValue ) {
-        JsonNode rootNode = SEARCH_NAME_TO_JSONNODE_MAPPING.get( searchUpon );
+        JsonNode rootNode = SEARCH_CATEGORY_TO_JSONNODE_MAPPING.get( searchUpon );
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         for ( int i=0; i<rootNode.size(); i++ ) {
             boolean matched = isMatched( rootNode.get(i), searchTerm, searchValue );
             if ( matched ) {
                 ObjectNode newNode = rootNode.get(i).deepCopy();
-
-                // If searching for user, find the tickets that have assignee_id equals to the user id
-                // search for all tickets that has assignee_id equals to the user ids
-                setAssociateFieldOnJsonNode( newNode, SearchRequest.USER, SearchRequest.TICKET, searchUpon,
-                        "_id", "assignee_id", "subject", "tickets" );
-
-                // If searching for ticket, find the corresponding user name that equals to the assignee_id
-                // search for the user that has _id equals to the assigneed_id
-                setAssociateFieldOnJsonNode( newNode, SearchRequest.TICKET, SearchRequest.USER, searchUpon,
-                        "assignee_id", "_id", "name", "assignee_name" );
-
+                switch (searchUpon) {
+                    case SearchRequest.USER:
+                        // If searching for user, find the tickets that have assignee_id equals to the user id
+                        // search for all tickets that has assignee_id equals to the user ids
+                        setAssociateFieldOnJsonNode( newNode, SearchRequest.TICKET, "_id", "assignee_id", "subject", "tickets" );
+                        break;
+                    case SearchRequest.TICKET:
+                        // If searching for ticket, find the corresponding user name that equals to the assignee_id
+                        // search for the user that has _id equals to the assigneed_id
+                        setAssociateFieldOnJsonNode( newNode, SearchRequest.USER, "assignee_id", "_id", "name", "assignee_name" );
+                        break;
+                    default:
+                        break;
+                }
                 arrayNode.add( newNode );
             }
         }
         return arrayNode;
     }
 
-    private void setAssociateFieldOnJsonNode( ObjectNode node, String category, String associateCategory, String searchUpon,
-                                              String foreignKey, String associateKey, String targetField, String newField ) {
-        if ( category.equalsIgnoreCase( searchUpon ) && node.get( foreignKey ) != null ) {
-            JsonNode rootNode = SEARCH_NAME_TO_JSONNODE_MAPPING.get( associateCategory );
+    /**
+     * retrieve an array of associated values from the associated category and set it as a new field on the node
+     *
+     * @param node the new ObjectNode that will potentially get updated with a new field
+     * @param associateCategory the other category that needs to be associated with
+     * @param foreignKey field name that corresponds to the queried category
+     * @param associateKey field name that corresponds to the associated category
+     * @param targetField the field that needs to be extracted from the matched object of associated category
+     * @param newField new field to be added to the node
+     *
+     */
+    private void setAssociateFieldOnJsonNode( ObjectNode node, String associateCategory, String foreignKey, String associateKey, String targetField, String newField ) {
+        if ( node.get( foreignKey ) != null ) {
+            JsonNode rootNode = SEARCH_CATEGORY_TO_JSONNODE_MAPPING.get( associateCategory );
             JsonNode associatesValue = searchForTargetTerm( rootNode, associateKey, node.get( foreignKey ).toString(), targetField );
             node.set( newField, associatesValue );
         }
     }
 
+    /**
+     * extract an ArrayNode of string values that corresponds to the searchValue on the searchTerm
+     *
+     * @param rootNode userRootNode or ticketRoodNode
+     * @param searchTerm field name
+     * @param searchValue value
+     * @param targetTerm the field that need to be extracted value from
+     *
+     * @return search result as an ArrayNode of string values (TextNode)
+     */
+    private JsonNode searchForTargetTerm( JsonNode rootNode, String searchTerm, String searchValue, String targetTerm ) {
+        ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
+        for ( int i=0; i<rootNode.size(); i++ ) {
+            boolean matched = isMatched( rootNode.get(i), searchTerm, searchValue );
+            if ( matched && rootNode.get(i).get( targetTerm ) != null && rootNode.get(i).get( targetTerm ).getNodeType() == JsonNodeType.STRING ) {
+                arrayNode.add( rootNode.get(i).get( targetTerm ).asText() );
+            }
+        }
+        return arrayNode;
+    }
+
+    /**
+     * check whether or not a JsonNode matches up to the searchValue upon the searchTerm
+     *
+     * @param node a JsonNode to be examined
+     * @param searchTerm field name
+     * @param searchValue value
+     *
+     * @return matched or not
+     */
+    private boolean isMatched( JsonNode node, String searchTerm, String searchValue ) {
+        JsonNode valueNode = node.get( searchTerm );
+        boolean matched = false;
+        if ( valueNode == null ) return false;
+        switch (valueNode.getNodeType()) {
+            case STRING:
+                if (valueNode.asText().toLowerCase().contains(searchValue.toLowerCase()))  matched = true;
+                break;
+            case BOOLEAN:
+                if (valueNode.asBoolean() == Boolean.parseBoolean(searchValue))  matched = true;
+                break;
+            case NUMBER:
+                if (valueNode.asInt() == Integer.parseInt(searchValue))  matched = true;
+                break;
+            case ARRAY:
+                for (int j = 0; j < valueNode.size(); j++) {
+                    JsonNode elem = valueNode.get(j);
+                    if (elem != null && elem.getNodeType() == JsonNodeType.STRING && elem.asText().toLowerCase().contains(searchValue.toLowerCase())) {
+                        matched = true;
+                        break;
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+        return matched;
+    }
+
+/// --------------------------------------------------------------------------  methods that deal with JsonNode printing
     public void printArrayNode( JsonNode arrayNode ) {
         if ( arrayNode.size() == 0 ) {
             System.out.println( "No results found");
@@ -100,14 +188,15 @@ public class SearchSystem {
         }
     }
 
+/// ------------------------------------------- methods that deal with json file conversion into JsonNode representation
     public void initializeData() {
         if ( this.userRootNode == null ) {
             this.userRootNode = readDataFromJsonFile( USER_JSON_PATH );
-            SEARCH_NAME_TO_JSONNODE_MAPPING.put( SearchRequest.USER, userRootNode );
+            SEARCH_CATEGORY_TO_JSONNODE_MAPPING.put( SearchRequest.USER, userRootNode );
         }
         if ( this.ticketRootNode == null ) {
             this.ticketRootNode = readDataFromJsonFile(TICKET_JSON_PATH);
-            SEARCH_NAME_TO_JSONNODE_MAPPING.put( SearchRequest.TICKET, ticketRootNode );
+            SEARCH_CATEGORY_TO_JSONNODE_MAPPING.put( SearchRequest.TICKET, ticketRootNode );
         }
     }
 
@@ -124,9 +213,10 @@ public class SearchSystem {
         return rootNode;
     }
 
+/// ---------------------------------------  methods that deal with retrieving distinct set of field names from JsonNode
     public Set<String> retrieveFieldsFormArrayNode( String searchUpon ) {
         Set<String> result = new HashSet<>();
-        JsonNode rootNode = SEARCH_NAME_TO_JSONNODE_MAPPING.get( searchUpon );
+        JsonNode rootNode = SEARCH_CATEGORY_TO_JSONNODE_MAPPING.get( searchUpon );
         for ( int i=0; i<rootNode.size(); i++ ) {
             Set<String> fields = retrieveFieldsFormObjectNode( (ObjectNode) rootNode.get(i) );
             result.addAll( fields );
@@ -144,43 +234,4 @@ public class SearchSystem {
         return result;
     }
 
-    private JsonNode searchForTargetTerm( JsonNode rootNode, String searchTerm, String searchValue, String targetTerm ) {
-        ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
-        for ( int i=0; i<rootNode.size(); i++ ) {
-            boolean matched = isMatched( rootNode.get(i), searchTerm, searchValue );
-            if ( matched && rootNode.get(i).get( targetTerm ) != null && rootNode.get(i).get( targetTerm ).getNodeType() == JsonNodeType.STRING ) {
-                arrayNode.add( rootNode.get(i).get( targetTerm ).asText() );
-            }
-        }
-        return arrayNode;
-    }
-
-    private boolean isMatched( JsonNode node, String searchTerm, String searchValue ) {
-        JsonNode valueNode = node.get( searchTerm );
-        boolean matched = false;
-        if ( valueNode == null ) return false;
-        switch (valueNode.getNodeType()) {
-            case STRING:
-                if (valueNode.asText().toLowerCase().contains(searchValue.toLowerCase()))  matched = true;
-                break;
-            case BOOLEAN:
-                if (valueNode.asBoolean() == Boolean.parseBoolean(searchValue))  matched = true;
-                break;
-            case NUMBER:
-                if (valueNode.asInt() == Integer.parseInt(searchValue))  matched = true;
-                break;
-            case ARRAY:
-                for (int j = 0; j < valueNode.size(); j++) {
-                    JsonNode elem = valueNode.get(j);
-                    if (elem != null && elem.getNodeType() == JsonNodeType.STRING && elem.asText().toLowerCase().contains(searchValue.toLowerCase())) {
-                        matched = true;
-                        break;
-                    }
-                }
-                break;
-            default:
-                break;
-        }
-        return matched;
-    }
 }
