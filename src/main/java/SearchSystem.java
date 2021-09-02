@@ -91,7 +91,7 @@ public class SearchSystem {
      *
      * @return search result as an ArrayNode of string values (TextNode)
      */
-    private JsonNode searchForTargetTerm( JsonNode rootNode, String searchTerm, String searchValue, String targetTerm ) {
+    public JsonNode searchForTargetTerm( JsonNode rootNode, String searchTerm, String searchValue, String targetTerm ) {
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         for ( int i=0; i<rootNode.size(); i++ ) {
             boolean matched = isMatched( rootNode.get(i), searchTerm, searchValue );
@@ -111,7 +111,7 @@ public class SearchSystem {
      *
      * @return matched or not
      */
-    private boolean isMatched( JsonNode node, String searchTerm, String searchValue ) {
+    public boolean isMatched( JsonNode node, String searchTerm, String searchValue ) {
         JsonNode valueNode = node.get( searchTerm );
         boolean matched = false;
         if ( valueNode == null ) return false;

@@ -1,6 +1,9 @@
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
+/**
+ * This class aims to test the correct transition between states upon various user inputs
+ * */
 public class InteractiveStateTest {
     @Test
     public void testStateTransitionFromPromptRequestType() {
