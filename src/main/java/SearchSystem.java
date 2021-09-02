@@ -17,8 +17,8 @@ import java.util.*;
  * */
 public class SearchSystem {
     private final static int TOTAL_SPACE = 20;
-    private static final String USER_JSON_PATH = "C:\\wendy\\java-search-cli\\src\\main\\resources\\users.json";
-    private static final String TICKET_JSON_PATH = "C:\\wendy\\java-search-cli\\src\\main\\resources\\tickets.json";
+    private static final String USER_JSON_PATH = "\\src\\main\\resources\\users.json";
+    private static final String TICKET_JSON_PATH = "\\src\\main\\resources\\tickets.json";
 
     private JsonNode userRootNode;
     private JsonNode ticketRootNode;
@@ -119,12 +119,6 @@ public class SearchSystem {
             case STRING:
                 if (valueNode.asText().toLowerCase().contains(searchValue.toLowerCase()))  matched = true;
                 break;
-            case BOOLEAN:
-                if (valueNode.asBoolean() == Boolean.parseBoolean(searchValue))  matched = true;
-                break;
-            case NUMBER:
-                if (valueNode.asInt() == Integer.parseInt(searchValue))  matched = true;
-                break;
             case ARRAY:
                 for (int j = 0; j < valueNode.size(); j++) {
                     JsonNode elem = valueNode.get(j);
@@ -134,7 +128,10 @@ public class SearchSystem {
                     }
                 }
                 break;
+            case BOOLEAN:
+            case NUMBER:
             default:
+                if (valueNode.toString().equalsIgnoreCase( searchValue ) )  matched = true;
                 break;
         }
         return matched;
@@ -190,12 +187,13 @@ public class SearchSystem {
 
 /// ------------------------------------------- methods that deal with json file conversion into JsonNode representation
     public void initializeData() {
+        String basePath = System.getProperty("user.dir");
         if ( this.userRootNode == null ) {
-            this.userRootNode = readDataFromJsonFile( USER_JSON_PATH );
+            this.userRootNode = readDataFromJsonFile( basePath + USER_JSON_PATH );
             SEARCH_CATEGORY_TO_JSONNODE_MAPPING.put( SearchRequest.USER, userRootNode );
         }
         if ( this.ticketRootNode == null ) {
-            this.ticketRootNode = readDataFromJsonFile(TICKET_JSON_PATH);
+            this.ticketRootNode = readDataFromJsonFile( basePath + TICKET_JSON_PATH );
             SEARCH_CATEGORY_TO_JSONNODE_MAPPING.put( SearchRequest.TICKET, ticketRootNode );
         }
     }

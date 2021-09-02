@@ -62,14 +62,14 @@ public enum InteractiveState {
             if ( (input == null) || input.equals("quit") ) {
                 return End;
             }
-            request.setSearchTerm(input);
-            boolean isSearchTermValid = request.validateSearchTerm();
+            boolean isSearchTermValid = request.validateSearchTerm( input );
             if ( isSearchTermValid ) {
+                request.setSearchTerm(input);
                 System.out.println("Enter search value");
                 return DisplaySearchResult;
             } else {
-                System.out.println("Search term not valid, Press 2 to view a list of searchable fields, or press 1 to restart your search");
-                return PromptRequestType;
+                System.out.println("Search term not valid, Press 2 to view a list of searchable fields, or re-enter your search term");
+                return this;
             }
         }
     },

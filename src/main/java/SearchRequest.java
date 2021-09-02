@@ -24,6 +24,14 @@ public class SearchRequest {
         this.searchSystem.initializeData();
     }
 
+    public SearchRequest(boolean searchUsers, String searchTerm, String searchValue) {
+        this.searchSystem = new SearchSystem();
+        this.searchSystem.initializeData();
+        this.searchUsers = searchUsers;
+        this.searchTerm = searchTerm;
+        this.searchValue = searchValue;
+    }
+
     /**
      * clear all search related fields
      */
@@ -61,13 +69,13 @@ public class SearchRequest {
     /**
      * check if search term entered by user is a legit field name from .json
      */
-    public boolean validateSearchTerm() {
+    public boolean validateSearchTerm( String input ) {
         if ( searchUsers ) {
             Set<String> userFields = this.searchSystem.retrieveFieldsFormArrayNode( USER );
-            return userFields.contains(searchTerm);
+            return userFields.contains( input );
         } else {
             Set<String> ticketFields = this.searchSystem.retrieveFieldsFormArrayNode( TICKET );
-            return ticketFields.contains(searchTerm);
+            return ticketFields.contains( input );
         }
     }
 
