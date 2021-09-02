@@ -18,6 +18,41 @@ public class SearchSystem {
     private JsonNode userRootNode;
     private JsonNode ticketRootNode;
 
+    private static final Map<String, JsonNode> SEARCH_NAME_TO_JSONNODE_MAPPING = new HashMap<>();
+
+    public JsonNode performSearch(String searchUpon, String searchTerm, String searchValue ) {
+        JsonNode rootNode = SEARCH_NAME_TO_JSONNODE_MAPPING.get( searchUpon );
+        ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
+        for ( int i=0; i<rootNode.size(); i++ ) {
+            boolean matched = isMatched( rootNode.get(i), searchTerm, searchValue );
+            if ( matched ) {
+                ObjectNode newNode = rootNode.get(i).deepCopy();
+
+                // If searching for user, find the tickets that have assignee_id equals to the user id
+                // search for all tickets that has assignee_id equals to the user ids
+                setAssociateFieldOnJsonNode( newNode, SearchRequest.USER, SearchRequest.TICKET, searchUpon,
+                        "_id", "assignee_id", "subject", "tickets" );
+
+                // If searching for ticket, find the corresponding user name that equals to the assignee_id
+                // search for the user that has _id equals to the assigneed_id
+                setAssociateFieldOnJsonNode( newNode, SearchRequest.TICKET, SearchRequest.USER, searchUpon,
+                        "assignee_id", "_id", "name", "assignee_name" );
+
+                arrayNode.add( newNode );
+            }
+        }
+        return arrayNode;
+    }
+
+    private void setAssociateFieldOnJsonNode( ObjectNode node, String category, String associateCategory, String searchUpon,
+                                              String foreignKey, String associateKey, String targetField, String newField ) {
+        if ( category.equalsIgnoreCase( searchUpon ) && node.get( foreignKey ) != null ) {
+            JsonNode rootNode = SEARCH_NAME_TO_JSONNODE_MAPPING.get( associateCategory );
+            JsonNode associatesValue = searchForTargetTerm( rootNode, associateKey, node.get( foreignKey ).toString(), targetField );
+            node.set( newField, associatesValue );
+        }
+    }
+
     public void printArrayNode( JsonNode arrayNode ) {
         if ( arrayNode.size() == 0 ) {
             System.out.println( "No results found");
@@ -35,60 +70,63 @@ public class SearchSystem {
         Iterator<Map.Entry<String, JsonNode>> iterator = objectNode.fields();
         while (iterator.hasNext()) {
             Map.Entry<String, JsonNode> element = iterator.next();
-            String spacing = String.format("%1$"+ (TOTAL_SPACE-element.getKey().length()) +"s", "");
-            String value = element.getValue().getNodeType() == JsonNodeType.STRING ? element.getValue().asText(): element.getValue().toString();
-            System.out.print(element.getKey() + spacing + value );
+            String spacing = String.format( "%1$"+ ( TOTAL_SPACE-element.getKey().length() ) +"s", "" );
+            String value = convertValueNodeToPrintable( element.getValue() );
+            System.out.print( element.getKey() + spacing + value );
             System.out.println();
         }
     }
 
-    public void initializeData() {
-        this.userRootNode = readDataFromJsonFile( USER_JSON_PATH );
-        this.ticketRootNode = readDataFromJsonFile( TICKET_JSON_PATH );
-    }
-
-    public JsonNode performSearch( String searchUpon, String searchTerm, String searchValue ) {
-        JsonNode rootNode = null;
-        if ( "user".equalsIgnoreCase( searchUpon ) ) {
-            rootNode = this.userRootNode;
-        }
-        if ( "ticket".equalsIgnoreCase( searchUpon ) ) {
-            rootNode = this.ticketRootNode;
-        }
-        ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
-        for ( int i=0; i<rootNode.size(); i++ ) {
-            boolean matched = isMatched( rootNode.get(i), searchTerm, searchValue );
-            if ( matched ) {
-                ObjectNode newNode = rootNode.get(i).deepCopy();
-                if ( "user".equalsIgnoreCase( searchUpon ) && newNode.get("_id") != null ) {
-                    // If searching for user, find the tickets that have assignee_id equals to the user id
-                    // search for all tickets that has assignee_id equals to the user ids
-                    JsonNode associatesValue = searchForTargetTerm( ticketRootNode, "assignee_id", newNode.get("_id").toString(), "subject" );
-                    newNode.set( "tickets", associatesValue );
-                }
-                if ( "ticket".equalsIgnoreCase( searchUpon ) && newNode.get("assignee_id") != null ) {
-                    // If searching for ticket, find the corresponding user name that equals to the assignee_id
-                    // search for the user that has _id equals to the assigneed_id
-                    JsonNode associatesValue = searchForTargetTerm( userRootNode, "_id", newNode.get("assignee_id").toString(), "name" );
-                    if ( associatesValue.size() > 0 ) {
-                        newNode.set( "assignee_name", associatesValue.get( 0 ) );
+    private String convertValueNodeToPrintable( JsonNode valueNode ) {
+        switch ( valueNode.getNodeType() ) {
+            case STRING:
+                return valueNode.asText();
+            case ARRAY:
+                StringBuilder sb = new StringBuilder();
+                sb.append("[");
+                for ( int i=0; i<valueNode.size(); i++ ) {
+                    if ( i != valueNode.size()-1 ) {
+                        sb.append(valueNode.get(i).asText()).append(", ");
+                    } else {
+                        sb.append(valueNode.get(i).asText());
                     }
                 }
-                arrayNode.add( newNode );
-            }
+                sb.append("]");
+                return sb.toString();
+            case BOOLEAN:
+            case NUMBER:
+            default:
+                return valueNode.toString();
         }
-        return arrayNode;
+    }
+
+    public void initializeData() {
+        if ( this.userRootNode == null ) {
+            this.userRootNode = readDataFromJsonFile( USER_JSON_PATH );
+            SEARCH_NAME_TO_JSONNODE_MAPPING.put( SearchRequest.USER, userRootNode );
+        }
+        if ( this.ticketRootNode == null ) {
+            this.ticketRootNode = readDataFromJsonFile(TICKET_JSON_PATH);
+            SEARCH_NAME_TO_JSONNODE_MAPPING.put( SearchRequest.TICKET, ticketRootNode );
+        }
+    }
+
+    private JsonNode readDataFromJsonFile( String path ) {
+        ObjectMapper mapper = new ObjectMapper();
+        byte[] jsonData;
+        JsonNode rootNode = null;
+        try {
+            jsonData = Files.readAllBytes(Paths.get( path ));
+            rootNode = mapper.readTree(jsonData);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return rootNode;
     }
 
     public Set<String> retrieveFieldsFormArrayNode( String searchUpon ) {
         Set<String> result = new HashSet<>();
-        JsonNode rootNode = null;
-        if ( "user".equalsIgnoreCase( searchUpon ) ) {
-            rootNode = this.userRootNode;
-        }
-        if ( "ticket".equalsIgnoreCase( searchUpon ) ) {
-            rootNode = this.ticketRootNode;
-        }
+        JsonNode rootNode = SEARCH_NAME_TO_JSONNODE_MAPPING.get( searchUpon );
         for ( int i=0; i<rootNode.size(); i++ ) {
             Set<String> fields = retrieveFieldsFormObjectNode( (ObjectNode) rootNode.get(i) );
             result.addAll( fields );
@@ -106,24 +144,11 @@ public class SearchSystem {
         return result;
     }
 
-    private JsonNode readDataFromJsonFile( String path ) {
-        ObjectMapper mapper = new ObjectMapper();
-        byte[] jsonData;
-        JsonNode rootNode = null;
-        try {
-            jsonData = Files.readAllBytes(Paths.get( path ));
-            rootNode = mapper.readTree(jsonData);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return rootNode;
-    }
-
     private JsonNode searchForTargetTerm( JsonNode rootNode, String searchTerm, String searchValue, String targetTerm ) {
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         for ( int i=0; i<rootNode.size(); i++ ) {
             boolean matched = isMatched( rootNode.get(i), searchTerm, searchValue );
-            if ( matched ) {
+            if ( matched && rootNode.get(i).get( targetTerm ) != null && rootNode.get(i).get( targetTerm ).getNodeType() == JsonNodeType.STRING ) {
                 arrayNode.add( rootNode.get(i).get( targetTerm ).asText() );
             }
         }
@@ -131,12 +156,12 @@ public class SearchSystem {
     }
 
     private boolean isMatched( JsonNode node, String searchTerm, String searchValue ) {
-        JsonNode valueNode = node.get(searchTerm);
+        JsonNode valueNode = node.get( searchTerm );
         boolean matched = false;
-        if (valueNode == null) return false;
+        if ( valueNode == null ) return false;
         switch (valueNode.getNodeType()) {
             case STRING:
-                if (valueNode.asText().contains(searchValue))  matched = true;
+                if (valueNode.asText().toLowerCase().contains(searchValue.toLowerCase()))  matched = true;
                 break;
             case BOOLEAN:
                 if (valueNode.asBoolean() == Boolean.parseBoolean(searchValue))  matched = true;
@@ -147,7 +172,7 @@ public class SearchSystem {
             case ARRAY:
                 for (int j = 0; j < valueNode.size(); j++) {
                     JsonNode elem = valueNode.get(j);
-                    if (elem.asText().contains(searchValue)) {
+                    if (elem != null && elem.getNodeType() == JsonNodeType.STRING && elem.asText().toLowerCase().contains(searchValue.toLowerCase())) {
                         matched = true;
                         break;
                     }

@@ -8,6 +8,8 @@ public class SearchRequest {
     private String searchTerm;
     private String searchValue;
     private JsonNode searchResult;
+    public static final String USER = "user";
+    public static final String TICKET = "ticket";
 
     public SearchRequest() {
         this.searchSystem = new SearchSystem();
@@ -31,27 +33,37 @@ public class SearchRequest {
 
     public void performSearch() {
         if (this.searchUsers) {
-            this.searchResult = this.searchSystem.performSearch("user", this.searchTerm, this.searchValue);
+            this.searchResult = this.searchSystem.performSearch(USER, this.searchTerm, this.searchValue);
         } else {
-            this.searchResult = this.searchSystem.performSearch("ticket", this.searchTerm, this.searchValue);
+            this.searchResult = this.searchSystem.performSearch(TICKET, this.searchTerm, this.searchValue);
         }
     }
 
     public void printSearchFields() {
-        this.searchSystem.initializeData();
-        Set<String> userFields = this.searchSystem.retrieveFieldsFormArrayNode( "user" );
-        Set<String> ticketFields = this.searchSystem.retrieveFieldsFormArrayNode( "ticket" );
+        printSearchFieldsForCategory( USER );
+        printSearchFieldsForCategory( TICKET );
+    }
+
+    public void printSearchFieldsForCategory( String category ) {
+        Set<String> fields = this.searchSystem.retrieveFieldsFormArrayNode( category );
         System.out.println("---------------------------------------------");
-        System.out.println("Search users with: ");
-        userFields.forEach(System.out::println);
-        System.out.println("---------------------------------------------");
-        System.out.println("Search tickets with: ");
-        ticketFields.forEach(System.out::println);
+        System.out.println("Search " + category + "s with: ");
+        fields.forEach(System.out::println);
     }
 
     public void printSearchHeader() {
-        String items = searchUsers ? "users" : "tickets";
+        String items = searchUsers ? USER : TICKET + "s";
         System.out.println("Searching " + items + " for " + searchTerm + " with a value of " + searchValue);
+    }
+
+    public boolean validateSearchTerm() {
+        if ( searchUsers ) {
+            Set<String> userFields = this.searchSystem.retrieveFieldsFormArrayNode( USER );
+            return userFields.contains(searchTerm);
+        } else {
+            Set<String> ticketFields = this.searchSystem.retrieveFieldsFormArrayNode( TICKET );
+            return ticketFields.contains(searchTerm);
+        }
     }
 
     public void setSearchUsers(boolean searchUsers) {
@@ -60,22 +72,6 @@ public class SearchRequest {
 
     public void setSearchTerm(String searchTerm) {
         this.searchTerm = searchTerm;
-    }
-
-    public boolean validateSearchTerm() {
-        if ( searchUsers ) {
-            Set<String> userFields = this.searchSystem.retrieveFieldsFormArrayNode( "user" );
-            if ( !userFields.contains( searchTerm ) ) {
-                return false;
-            }
-            return true;
-        } else {
-            Set<String> ticketFields = this.searchSystem.retrieveFieldsFormArrayNode( "ticket" );
-            if ( !ticketFields.contains( searchTerm ) ) {
-                return false;
-            }
-            return true;
-        }
     }
 
     public void setSearchValue(String searchValue) {
