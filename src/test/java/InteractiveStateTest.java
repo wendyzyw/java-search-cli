@@ -41,7 +41,7 @@ public class InteractiveStateTest {
         Assert.assertEquals( nextState, InteractiveState.PromptSearchTerm );
 
         nextState = state.nextState( "3", request );
-        Assert.assertEquals( nextState, InteractiveState.PromptSearchTerm );
+        Assert.assertEquals( nextState, InteractiveState.PromptSearchOption );
 
         nextState = state.nextState( "quit", request );
         Assert.assertEquals( nextState, InteractiveState.End );
